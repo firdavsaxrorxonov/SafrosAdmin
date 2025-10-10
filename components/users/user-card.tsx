@@ -47,7 +47,6 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
             </Avatar>
             <div>
               <h3 className="font-semibold">{user.username}</h3>
-              <p className="text-sm text-muted-foreground">{user.email || t("noEmail")}</p>
             </div>
           </div>
           <Badge className={getRoleColor(user.role)}>

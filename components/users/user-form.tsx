@@ -25,8 +25,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
   const initialIsSuperuser = initialRole === "admin"
 
   const [formData, setFormData] = useState({
-    first_name: editingUser?.first_name || "",
-    last_name: editingUser?.last_name || "",
     username: editingUser?.username || "",
     password: "",
     role: initialRole,
@@ -41,11 +39,9 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
   useEffect(() => {
     const role = editingUser?.role || "user"
     setFormData({
-      first_name: editingUser?.first_name || "",
-      last_name: editingUser?.last_name || "",
       username: editingUser?.username || "",
       password: "",
-      role: role,
+      role,
       is_superuser: role === "admin",
     })
   }, [editingUser])
@@ -66,8 +62,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
     }
 
     const payload: any = {
-      first_name: formData.first_name,
-      last_name: formData.last_name,
       username: formData.username,
       role: formData.role,
       is_superuser: formData.is_superuser,
@@ -87,7 +81,7 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
       }
 
       onSubmit(payload)
-      setFormData({ first_name: "", last_name: "", username: "", password: "", role: "user", is_superuser: false })
+      setFormData({ username: "", password: "", role: "user", is_superuser: false })
       onClose()
     } catch (error: any) {
       console.error("UserForm error:", error.response?.data || error)
@@ -105,31 +99,14 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
         <DialogHeader>
           <DialogTitle>{editingUser ? t("edit") : t("create")}</DialogTitle>
           <DialogDescription>
-            {editingUser ? t("Update the product information below.") : t("Fill in the product information below.")}
+            {editingUser
+              ? t("Update the user information below.")
+              : t("Fill in the user information below.")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="first_name">{t("name")} (First)</Label>
-            <Input
-              id="first_name"
-              value={formData.first_name}
-              onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-              placeholder={t("name")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="last_name">{t("name")} (Last)</Label>
-            <Input
-              id="last_name"
-              value={formData.last_name}
-              onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-              placeholder={t("name")}
-            />
-          </div>
-
+          {/* Username */}
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
             <Input
@@ -141,6 +118,7 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
             />
           </div>
 
+          {/* Password */}
           <div className="space-y-2">
             <Label htmlFor="password">
               {editingUser ? t("Password (leave empty if not changing)") : t("Password")}
@@ -150,11 +128,16 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
               type="password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder={editingUser ? t("Leave empty to keep current password") : t("Password")}
+              placeholder={
+                editingUser
+                  ? t("Leave empty to keep current password")
+                  : t("Enter password")
+              }
               required={!editingUser}
             />
           </div>
 
+          {/* Role */}
           <div className="space-y-2">
             <Label htmlFor="role">{t("role")}</Label>
             <Select value={formData.role} onValueChange={handleRoleChange}>
@@ -168,8 +151,11 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
             </Select>
           </div>
 
+          {/* Buttons */}
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              {t("cancel")}
+            </Button>
             <Button type="submit" className="bg-green-600 hover:bg-green-700">
               {editingUser ? t("update") : t("create")}
             </Button>

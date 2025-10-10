@@ -112,7 +112,6 @@ export default function OrdersPage() {
         rows.push({
           [t("Buyurtma raqami")]: order.order_number,
           [t("customerName")]: order.customerName,
-          [t("customerEmail")]: order.customerEmail,
           [t("product")]: item.productName,
           [t("quantity")]: item.quantity,
           [t("price")]: item.productPrice, // productdagi narx

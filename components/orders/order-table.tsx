@@ -70,7 +70,6 @@ export function OrderTable({
       rows.push({
         [t("orderNumber")]: order.order_number,
         [t("customerName")]: order.customerName,
-        [t("customerEmail")]: order.customerEmail,
         [t("product")]: item.productName,
         [t("quantity")]: item.quantity,
         [t("price")]: item.productPrice, // productdagi narx
