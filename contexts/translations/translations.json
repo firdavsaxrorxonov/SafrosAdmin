@@ -10,6 +10,7 @@
     "orders": "Buyurtmalar",
     "users": "Xodimlar",
     "settings": "Sozlamalar",
+    "contactNumber": "Telefon raqami",
     "min_quantity": "Minimal miqdor",
     "time": "Vaqt",
     "banners": "Bannerlar",
@@ -141,6 +142,7 @@
     "settings": "Настройки",
     "time": "Время",
     "profile": "Профиль",
+
     "logout": "Выйти",
     "language": "Язык",
     "theme": "Тема",

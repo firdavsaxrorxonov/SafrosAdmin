@@ -42,29 +42,29 @@ export default function OrdersPage() {
       const res = await api.get("/order/list/", { params });
       const data = res.data;
 
-  // API dan kelgan orders map qilinadi
-const formattedOrders = data.results.map((order: any) => ({
-  id: order.id,
-  order_number: order.order_number,
-  customerName:
-    order.user?.first_name && order.user?.last_name
-      ? `${order.user.first_name} ${order.user.last_name}`
-      : order.name || "—",
-  customerEmail: order.user?.username || "—",
-  amount: order.total_price,
-  createdAt: order.created_at,
-  comment: order.comment || "—",
-  contact_number: order.contact_number || "—",
-  items: order.items.map((item: any) => ({
-    productId: item.product.id,
-    productName: item.product.name_uz, // faqat nomi, unity emas
-    productCode: item.product.code,
-    quantity: item.quantity,
-    price: item.price,
-    productPrice: item.product.price,
-    unity: item.product.unity || "—", // 🔹 faqat API dan kelayotgan unity ishlatiladi
-  })),
-}));
+      // API dan kelgan orders map qilinadi
+      const formattedOrders = data.results.map((order: any) => ({
+        id: order.id,
+        order_number: order.order_number,
+        customerName:
+          order.user?.first_name && order.user?.last_name
+            ? `${order.user.first_name} ${order.user.last_name}`
+            : order.name || "—",
+        customerEmail: order.user?.username || "—",
+        amount: order.total_price,
+        createdAt: order.created_at,
+        comment: order.comment || "—",
+        contact_number: order.contact_number || "—",
+        items: order.items.map((item: any) => ({
+          productId: item.product.id,
+          productName: item.product.name,
+          productCode: item.product.code,
+          quantity: item.quantity,
+          price: item.price,
+          productPrice: item.product.price,
+          unity: item.product.unity || "—",
+        })),
+      }));
 
 
       setOrders(formattedOrders);

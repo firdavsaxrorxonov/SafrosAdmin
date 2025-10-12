@@ -140,8 +140,7 @@ export function OrderTable({
               <TableRow key={order.id}>
                 <TableCell className="font-medium">{index + 1}</TableCell>
                 <TableCell>
-                  <div className="font-medium">{order.customerName}</div>
-                  <div className="text-sm text-muted-foreground">{order.customerEmail}</div>
+                  <div className="font-medium">{order.customerEmail}</div>
                 </TableCell>
                 <TableCell>{order.items.length} {t("items")}</TableCell>
                 <TableCell className="font-medium">{order.amount} UZS</TableCell>

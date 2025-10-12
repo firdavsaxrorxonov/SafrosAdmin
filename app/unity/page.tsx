@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { Layout } from "@/components/layout/layout"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Button } from "@/components/ui/button"
@@ -22,11 +22,12 @@ export default function UnitsPage() {
   const { t } = useLanguage()
   const [units, setUnits] = useState<Unit[]>([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState("")
-  const ITEMS_PER_PAGE = 10
+  const ITEMS_PER_PAGE = 150
 
   const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
   const token = typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null
@@ -34,16 +35,18 @@ export default function UnitsPage() {
   const api = axios.create({ baseURL })
   if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`
 
-  const fetchUnits = async () => {
+  // FETCH UNITS
+  const fetchUnits = async (page: number = 1) => {
     try {
       setLoading(true)
-      const { data } = await api.get("/unity/list/")
+      const { data } = await api.get(`/unity/list/?page=${page}&page_size=${ITEMS_PER_PAGE}`)
       setUnits(
         data.results.map((u: any) => ({
           id: u.id,
           name: u.name,
         }))
       )
+      setTotalPages(data.total_pages)
     } catch (error) {
       console.error(error)
       toast.error(t("Failed to fetch units"))
@@ -53,20 +56,15 @@ export default function UnitsPage() {
   }
 
   useEffect(() => {
-    fetchUnits()
-  }, [])
-
-  const paginatedUnits = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE
-    return units.slice(start, start + ITEMS_PER_PAGE)
-  }, [units, currentPage])
+    fetchUnits(currentPage)
+  }, [currentPage])
 
   // CREATE
   const handleCreateUnit = async () => {
     try {
       await api.post("/unity/create/", { name })
       toast.success(t("Unit created"))
-      fetchUnits()
+      fetchUnits(currentPage)
     } catch (error: any) {
       console.error(error)
       toast.error(error?.response?.data?.detail || t("Failed to create unit"))
@@ -78,7 +76,7 @@ export default function UnitsPage() {
     try {
       await api.patch(`/unity/${id}/update/`, { name })
       toast.success(t("Unit updated"))
-      fetchUnits()
+      fetchUnits(currentPage)
     } catch (error: any) {
       console.error(error)
       toast.error(error?.response?.data?.detail || t("Failed to update unit"))
@@ -166,7 +164,7 @@ export default function UnitsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedUnits.map((unit, index) => (
+                    {units.map((unit, index) => (
                       <TableRow key={unit.id}>
                         <TableCell className="font-medium">
                           {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
@@ -194,10 +192,10 @@ export default function UnitsPage() {
               </div>
 
               {/* Pagination */}
-              {Math.ceil(units.length / ITEMS_PER_PAGE) > 1 && (
+              {totalPages > 1 && (
                 <Pagination
                   currentPage={currentPage}
-                  totalPages={Math.ceil(units.length / ITEMS_PER_PAGE)}
+                  totalPages={totalPages}
                   onPageChange={setCurrentPage}
                 />
               )}
