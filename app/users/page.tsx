@@ -12,7 +12,6 @@ import { UserForm } from "@/components/users/user-form"
 import type { User } from "@/types/order"
 import { useLanguage } from "@/contexts/language-context"
 
-
 const ITEMS_PER_PAGE = 10
 
 export default function UsersPage() {
@@ -35,10 +34,7 @@ export default function UsersPage() {
       const { data } = await api.get("/user/list/")
       const formattedUsers = data.results.map((u: User) => {
         const dateJoined = u.date_joined ? new Date(u.date_joined.split(".")[0]).toLocaleString() : ""
-        return {
-          ...u,
-          date_joined: dateJoined,
-        }
+        return { ...u, date_joined: dateJoined }
       })
       setUsers(formattedUsers)
     } catch (error) {
@@ -71,12 +67,26 @@ export default function UsersPage() {
       role: string
       is_superuser: boolean
       password?: string
+      username?: string
     }
   ) => {
     try {
       if (editingUser) {
-        const payload = { ...userData }
-        if (!payload.password) delete payload.password
+        const payload: any = {
+          role: userData.role,
+          is_superuser: userData.is_superuser,
+        }
+
+        // PATCH uchun username faqat o'zgargan bo'lsa jo'natilsin
+        if (userData.username && userData.username !== editingUser.username) {
+          payload.username = userData.username
+        }
+
+        // Parol kiritilgan bo'lsa
+        if (userData.password) {
+          payload.password = userData.password
+        }
+
         await api.patch(`/user/${editingUser.id}/update/`, payload)
         setEditingUser(null)
       } else {
@@ -86,6 +96,7 @@ export default function UsersPage() {
           date_joined: new Date().toISOString(),
         })
       }
+
       await fetchUsers()
       setIsFormOpen(false)
     } catch (error) {
@@ -132,7 +143,6 @@ export default function UsersPage() {
             </Button>
           </div>
 
-          {/* Role Filter */}
           <div className="flex items-center gap-4">
             <label className="text-sm font-medium">{t("Filter_by_Role")}</label>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
@@ -147,14 +157,12 @@ export default function UsersPage() {
             </Select>
           </div>
 
-          {/* Loading */}
           {loading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-green-600" />
             </div>
           ) : (
             <>
-              {/* Users Grid */}
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {paginatedUsers.map((user) => (
                   <UserCard
@@ -168,11 +176,12 @@ export default function UsersPage() {
 
               {filteredUsers.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">{t("No users found. Add a new user to get started.")}</p>
+                  <p className="text-muted-foreground">
+                    {t("No users found. Add a new user to get started.")}
+                  </p>
                 </div>
               )}
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex justify-center mt-6 gap-2">
                   {Array.from({ length: totalPages }).map((_, i) => (
@@ -187,7 +196,6 @@ export default function UsersPage() {
                 </div>
               )}
 
-              {/* User Form */}
               <UserForm
                 isOpen={isFormOpen}
                 onClose={handleFormClose}

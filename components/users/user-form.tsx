@@ -7,14 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import axios from "axios"
 import type { User } from "@/types/order"
 import { useLanguage } from "@/contexts/language-context"
 
 interface UserFormProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (userData: Omit<User, "id" | "date_joined" | "last_login"> & { role: string; password?: string; is_superuser: boolean }) => void
+  onSubmit: (userData: Omit<User, "id" | "date_joined" | "last_login"> & { role: string; password?: string; is_superuser: boolean; username?: string }) => void
   editingUser?: User | null
 }
 
@@ -30,11 +29,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
     role: initialRole,
     is_superuser: initialIsSuperuser,
   })
-
-  const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
-  const token = typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null
-  const api = axios.create({ baseURL })
-  if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`
 
   useEffect(() => {
     const role = editingUser?.role || "user"
@@ -54,7 +48,7 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
     })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.username || (!editingUser && !formData.password)) {
       alert(t("Please fill all required fields"))
@@ -62,35 +56,21 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
     }
 
     const payload: any = {
-      username: formData.username,
       role: formData.role,
       is_superuser: formData.is_superuser,
+    }
+
+    if (!editingUser || formData.username !== editingUser.username) {
+      payload.username = formData.username
     }
 
     if (!editingUser || formData.password) {
       payload.password = formData.password
     }
 
-    try {
-      if (editingUser) {
-        await api.patch(`/user/${editingUser.id}/update/`, payload)
-      } else {
-        payload.last_login = new Date().toISOString()
-        payload.date_joined = new Date().toISOString()
-        await api.post("/user/create/", payload)
-      }
-
-      onSubmit(payload)
-      setFormData({ username: "", password: "", role: "user", is_superuser: false })
-      onClose()
-    } catch (error: any) {
-      console.error("UserForm error:", error.response?.data || error)
-      alert(
-        error.response?.data?.username?.[0] ||
-        error.response?.data?.password?.[0] ||
-        t("Error")
-      )
-    }
+    onSubmit(payload)
+    setFormData({ username: "", password: "", role: "user", is_superuser: false })
+    onClose()
   }
 
   return (
@@ -106,7 +86,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Username */}
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
             <Input
@@ -118,7 +97,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
             />
           </div>
 
-          {/* Password */}
           <div className="space-y-2">
             <Label htmlFor="password">
               {editingUser ? t("Password (leave empty if not changing)") : t("Password")}
@@ -128,16 +106,13 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
               type="password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder={
-                editingUser
-                  ? t("Leave empty to keep current password")
-                  : t("Enter password")
-              }
+              placeholder={editingUser
+                ? t("Leave empty to keep current password")
+                : t("Enter password")}
               required={!editingUser}
             />
           </div>
 
-          {/* Role */}
           <div className="space-y-2">
             <Label htmlFor="role">{t("role")}</Label>
             <Select value={formData.role} onValueChange={handleRoleChange}>
@@ -151,7 +126,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
             </Select>
           </div>
 
-          {/* Buttons */}
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
               {t("cancel")}

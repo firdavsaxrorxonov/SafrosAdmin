@@ -191,11 +191,12 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
                 <SelectContent>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.nameUz}
+                      {cat.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
             </div>
             <div>
               <Label>{t("Unit")}</Label>

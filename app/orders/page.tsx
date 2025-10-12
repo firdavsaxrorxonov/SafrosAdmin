@@ -1,3 +1,4 @@
+// OrdersPage.tsx
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -21,7 +22,6 @@ export default function OrdersPage() {
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<string>("");
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 20;
@@ -34,7 +34,6 @@ export default function OrdersPage() {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
-  // Buyurtmalarni olish
   const fetchOrders = async (page: number = 1) => {
     try {
       const params: any = { page, page_size: itemsPerPage };
@@ -43,24 +42,30 @@ export default function OrdersPage() {
       const res = await api.get("/order/list/", { params });
       const data = res.data;
 
-      const formattedOrders: Order[] = data.results.map((o: any) => ({
-        id: o.id,
-        order_number: o.order_number,
-        customerName:
-          o.user?.first_name && o.user?.last_name
-            ? `${o.user.first_name} ${o.user.last_name}`
-            : o.name || t("noName"),
-        customerEmail: o.user?.username || t("noEmail"),
-        amount: o.total_price,
-        createdAt: o.created_at,
-        items: o.items.map((item: any) => ({
-          productId: item.product.id,
-          productName: item.product.name_uz,
-          quantity: item.quantity,
-          price: item.price, // buyurtmadagi narx
-          productPrice: item.product.price, // productning o‘zidagi narx
-        })),
-      }));
+  // API dan kelgan orders map qilinadi
+const formattedOrders = data.results.map((order: any) => ({
+  id: order.id,
+  order_number: order.order_number,
+  customerName:
+    order.user?.first_name && order.user?.last_name
+      ? `${order.user.first_name} ${order.user.last_name}`
+      : order.name || "—",
+  customerEmail: order.user?.username || "—",
+  amount: order.total_price,
+  createdAt: order.created_at,
+  comment: order.comment || "—",
+  contact_number: order.contact_number || "—",
+  items: order.items.map((item: any) => ({
+    productId: item.product.id,
+    productName: item.product.name_uz, // faqat nomi, unity emas
+    productCode: item.product.code,
+    quantity: item.quantity,
+    price: item.price,
+    productPrice: item.product.price,
+    unity: item.product.unity || "—", // 🔹 faqat API dan kelayotgan unity ishlatiladi
+  })),
+}));
+
 
       setOrders(formattedOrders);
       setCurrentPage(data.page);
@@ -89,7 +94,6 @@ export default function OrdersPage() {
     fetchOrders(page);
   };
 
-  // Client-side filter orders by selectedUser
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
       const matchesUser =
@@ -102,7 +106,6 @@ export default function OrdersPage() {
     });
   }, [orders, selectedUser, selectedDate]);
 
-  // Excel eksport
   const exportToExcel = () => {
     if (!filteredOrders.length) return;
 
@@ -110,12 +113,14 @@ export default function OrdersPage() {
     filteredOrders.forEach((order) => {
       order.items.forEach((item) => {
         rows.push({
-          [t("Buyurtma raqami")]: order.order_number,
+          [t("orderNumber")]: order.order_number,
           [t("customerName")]: order.customerName,
+          [t("productCode")]: item.productCode,
           [t("product")]: item.productName,
           [t("quantity")]: item.quantity,
-          [t("price")]: item.productPrice, // productdagi narx
-          [t("total")]: item.price, // buyurtmadagi narx
+          [t("Unit")]: item.unity,
+          [t("price")]: item.productPrice,
+          [t("total")]: item.price,
           [t("date")]: new Date(order.createdAt).toLocaleDateString("uz-UZ", {
             year: "numeric",
             month: "2-digit",
@@ -127,7 +132,6 @@ export default function OrdersPage() {
             second: "2-digit",
           }),
         });
-
       });
     });
 
@@ -153,7 +157,6 @@ export default function OrdersPage() {
         <div className="space-y-6">
           <h1 className="text-3xl font-bold">{t("orders")}</h1>
 
-          {/* Filters */}
           <div className="flex gap-4 items-center">
             <select
               value={selectedUser}
@@ -178,14 +181,12 @@ export default function OrdersPage() {
             <Button onClick={exportToExcel}>{t("exportExcel")}</Button>
           </div>
 
-          {/* Orders Table */}
           <OrderTable
             orders={filteredOrders}
             onViewOrder={handleViewOrder}
             onDeleteSuccess={() => fetchOrders(currentPage)}
           />
 
-          {/* Pagination */}
           <div className="flex justify-center items-center gap-2 mt-4">
             <Button
               onClick={() => handlePageChange(currentPage - 1)}
@@ -210,7 +211,6 @@ export default function OrdersPage() {
             </Button>
           </div>
 
-          {/* Order Details Modal */}
           <OrderDetails
             isOpen={isDetailsOpen}
             onClose={() => setIsDetailsOpen(false)}

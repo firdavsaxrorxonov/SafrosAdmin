@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Trash2, Edit } from "lucide-react"
-import type { Product, Category } from "@/types/product"
+import type { Product } from "@/types/product"
 import axios from "axios"
 import { useLanguage } from "@/contexts/language-context"
 
@@ -15,8 +15,8 @@ interface ProductTableProps {
   onUpdateProduct: (product: Product) => void
   currentPage: number
   itemsPerPage: number
-  units: { id: string; name_uz: string; name_ru: string }[]
-  categories: Category[]
+  units: { id: string; name: string }[]
+  categories: { id: string; name: string }[]
 }
 
 export function ProductTable({
@@ -34,18 +34,10 @@ export function ProductTable({
   const [tempPrice, setTempPrice] = useState<string>("")
 
   const getUnitName = (unityId: string) =>
-    units.find((u) => u.id === unityId)
-      ? language === "uz"
-        ? units.find((u) => u.id === unityId)!.name_uz
-        : units.find((u) => u.id === unityId)!.name_ru
-      : "—"
+    units.find((u) => u.id === unityId)?.name || "—"
 
   const getCategoryName = (categoryId: string) =>
-    categories.find((c) => c.id === categoryId)
-      ? language === "uz"
-        ? categories.find((c) => c.id === categoryId)!.nameUz
-        : categories.find((c) => c.id === categoryId)!.nameRu
-      : "—"
+    categories.find((c) => c.id === categoryId)?.name || "—"
 
   const handleDoubleClick = (product: Product) => {
     setEditingId(product.id)
@@ -76,13 +68,11 @@ export function ProductTable({
         }
       )
 
-      // ✅ faqat shu productni parent-ga qaytarib yangilash
       onUpdateProduct({ ...product, price: tempPrice })
-
       setEditingId(null)
     } catch (err) {
       console.error(err)
-      alert(t("Error") + ": " + t("Failed to fetch suppliers"))
+      alert(t("Error") + ": " + t("Failed to update product"))
     }
   }
 
@@ -104,14 +94,11 @@ export function ProductTable({
           </TableHeader>
           <TableBody>
             {products.map((product, index) => (
-              <TableRow key={product.order_number}>
+              <TableRow key={product.id}>
                 <TableCell className="font-medium">
                   {(currentPage - 1) * itemsPerPage + index + 1}
                 </TableCell>
-                <TableCell>{product.name_uz}</TableCell>
-                <TableCell>{product.name_ru}</TableCell>
-
-                {/* Inline price edit */}
+                <TableCell>{product.name}</TableCell>
                 <TableCell
                   onDoubleClick={() => handleDoubleClick(product)}
                   className="cursor-pointer"
@@ -133,10 +120,9 @@ export function ProductTable({
                       className="w-20 border rounded px-1"
                     />
                   ) : (
-                    product.price
-                  )} UZS
+                    `${product.price} UZS`
+                  )}
                 </TableCell>
-
                 <TableCell>{getCategoryName(product.category)}</TableCell>
                 <TableCell>{getUnitName(product.unity)}</TableCell>
                 <TableCell>{product.quantity_left || "—"}</TableCell>

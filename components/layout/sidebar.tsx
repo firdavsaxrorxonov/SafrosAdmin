@@ -14,6 +14,7 @@ import {
   LogOut,
   Ruler,
   Image,
+  Building
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -27,6 +28,7 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Categories", href: "/categories", icon: FolderOpen },
   { name: "Units", href: "/unity", icon: Ruler },
+  { name: "Obyekts", href: "/obyekts", icon: Building },
   { name: "Banners", href: "/banners", icon: Image },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
   { name: "Users", href: "/users", icon: Users },

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://horeca.felixits.uz/api/v1/admin",
+  baseURL: "http://91.218.246.233/api/v1/admin",
 });
 
 export default api;

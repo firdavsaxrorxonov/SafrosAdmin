@@ -41,7 +41,6 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Customer Info */}
           <div>
             <h3 className="font-semibold mb-2">{t("customerInformation")}</h3>
             <div className="space-y-1 text-sm">
@@ -50,13 +49,17 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
                 {order.customerName}
               </div>
               <div>
-                <span className="font-medium">{t("email")}:</span>{" "}
-                {order.customerEmail}
+                <span className="font-medium">{t("contactNumber")}:</span>{" "}
+                {order.contact_number}
+              </div>
+              <div>
+                <p className="max-w-md break-words">
+                  {order.comment || t("noComment")}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Order Items */}
           <div>
             <h3 className="font-semibold mb-2">{t("orderItems")}</h3>
             <Table>
@@ -64,6 +67,7 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
                 <TableRow>
                   <TableHead>{t("product")}</TableHead>
                   <TableHead>{t("quantity")}</TableHead>
+                  <TableHead>{t("unity")}</TableHead>
                   <TableHead>{t("price")}</TableHead>
                   <TableHead>{t("total")}</TableHead>
                 </TableRow>
@@ -75,6 +79,7 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
                       {item.productName}
                     </TableCell>
                     <TableCell>{item.quantity}</TableCell>
+                    <TableCell>{item.unity}</TableCell>
                     <TableCell>{item.productPrice} UZS</TableCell>
                     <TableCell>{item.price} UZS</TableCell>
                   </TableRow>
