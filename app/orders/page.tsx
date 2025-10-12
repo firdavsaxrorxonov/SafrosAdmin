@@ -113,9 +113,7 @@ export default function OrdersPage() {
     filteredOrders.forEach((order) => {
       order.items.forEach((item) => {
         rows.push({
-          [t("orderNumber")]: order.order_number,
-          [t("customerName")]: order.customerName,
-          [t("productCode")]: item.productCode,
+          [t("customerName")]: order.customerEmail,
           [t("product")]: item.productName,
           [t("quantity")]: item.quantity,
           [t("Unit")]: item.unity,

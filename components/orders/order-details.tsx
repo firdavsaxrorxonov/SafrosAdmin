@@ -67,7 +67,7 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {t("orderDetails")} - {order.customerName}
+            {t("orderDetails")} - {order.customerEmail}
           </DialogTitle>
           <DialogDescription>{t("completeOrderInfo")}</DialogDescription>
         </DialogHeader>
@@ -78,11 +78,7 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
             <div className="space-y-1 text-sm">
               <div>
                 <span className="font-medium">{t("name")}:</span>{" "}
-                {order.customerName}
-              </div>
-              <div>
-                <span className="font-medium">{t("contactNumber")}:</span>{" "}
-                {order.contact_number}
+                {order.customerEmail}
               </div>
               <div>
                 <p className="max-w-md break-words">

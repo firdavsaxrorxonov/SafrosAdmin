@@ -77,9 +77,7 @@ export function OrderTable({
 
     order.items.forEach((item) => {
       rows.push({
-        [t("orderNumber")]: order.order_number,
-        [t("customerName")]: order.customerName,
-        [t("productCode")]: item.productCode,
+        [t("customerName")]: order.customerEmail,
         [t("product")]: item.productName,
         [t("quantity")]: item.quantity,
         [t("Unit")]: item.unity,
@@ -90,25 +88,22 @@ export function OrderTable({
           month: "2-digit",
           day: "2-digit",
         }),
+        [t("time")]: new Date(order.createdAt).toLocaleTimeString("uz-UZ", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
       });
     });
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const worksheetRange = XLSX.utils.decode_range(worksheet["!ref"]!);
 
+    // Commentni alohida qatorda yozish
     XLSX.utils.sheet_add_aoa(
       worksheet,
-      [[
-        t("comment"),
-        order.comment || "—",
-        t(""),
-        new Date(order.createdAt).toLocaleTimeString("uz-UZ", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-      ]],
-      { origin: { r: worksheetRange.e.r + 5, c: 0 } }
+      [[t("comment"), order.comment || "—"]],
+      { origin: { r: worksheetRange.e.r + 1, c: 0 } }
     );
 
     const workbook = XLSX.utils.book_new();
@@ -117,9 +112,10 @@ export function OrderTable({
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
 
-    const fileName = `buyurtma_${order.order_number}_${order.customerName}.xlsx`;
+    const fileName = `buyurtma_${order.order_number}_${order.customerEmail}.xlsx`;
     saveAs(data, fileName);
   };
+
 
   return (
     <>
@@ -142,7 +138,9 @@ export function OrderTable({
                 <TableCell>
                   <div className="font-medium">{order.customerEmail}</div>
                 </TableCell>
-                <TableCell>{order.items.length} {t("items")}</TableCell>
+                <TableCell>
+                  {order.items.length} {t("items")}
+                </TableCell>
                 <TableCell className="font-medium">{order.amount} UZS</TableCell>
                 <TableCell>
                   {new Date(order.createdAt).toLocaleString("uz-UZ", {
@@ -156,7 +154,11 @@ export function OrderTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => onViewOrder(order)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onViewOrder(order)}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
 
@@ -195,7 +197,10 @@ export function OrderTable({
             <DialogDescription>{t("sure")}</DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               {t("Cancele")}
             </Button>
             <Button variant="destructive" onClick={handleDeleteConfirmed}>
