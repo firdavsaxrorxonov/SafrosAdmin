@@ -13,17 +13,22 @@ import { saveAs } from "file-saver";
 import type { Order } from "@/types/order";
 import { useLanguage } from "@/contexts/language-context";
 
+interface User {
+  id: string;
+  username: string;
+}
+
 export default function OrdersPage() {
   const { t } = useLanguage();
 
   const [orders, setOrders] = useState<Order[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<string>("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 20;
 
   const token =
@@ -34,15 +39,25 @@ export default function OrdersPage() {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
-  const fetchOrders = async (page: number = 1) => {
+  // Usersni olish
+  const fetchUsers = async () => {
     try {
-      const params: any = { page, page_size: itemsPerPage };
-      if (selectedDate) params.date = selectedDate;
+      const res = await api.get("/user/list/");
+      const data = res.data;
+      setUsers(data.results || []);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    }
+  };
 
-      const res = await api.get("/order/list/", { params });
+  // Ordersni olish
+  const fetchOrders = async () => {
+    try {
+      const res = await api.get("/order/list/", {
+        params: { page_size: 1000 }, // frontend filter uchun barcha orderlarni olamiz
+      });
       const data = res.data;
 
-      // API dan kelgan orders map qilinadi
       const formattedOrders = data.results.map((order: any) => ({
         id: order.id,
         order_number: order.order_number,
@@ -66,38 +81,27 @@ export default function OrdersPage() {
         })),
       }));
 
-
       setOrders(formattedOrders);
-      setCurrentPage(data.page);
-      setTotalPages(data.total_pages);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
     }
   };
 
   useEffect(() => {
-    fetchOrders(currentPage);
+    fetchUsers();
+    fetchOrders();
   }, []);
-
-  useEffect(() => {
-    setCurrentPage(1);
-    fetchOrders(1);
-  }, [selectedDate]);
 
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
     setIsDetailsOpen(true);
   };
 
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    fetchOrders(page);
-  };
-
+  // Filterlangan orders
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
       const matchesUser =
-        selectedUser === "all" || order.customerName === selectedUser;
+        selectedUser === "all" || order.customerEmail === selectedUser;
       const matchesDate =
         !selectedDate ||
         new Date(order.createdAt).toLocaleDateString() ===
@@ -106,6 +110,20 @@ export default function OrdersPage() {
     });
   }, [orders, selectedUser, selectedDate]);
 
+  // Pagination hisob
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const currentOrders = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredOrders.slice(start, end);
+  }, [filteredOrders, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
+
+  // Excel export
   const exportToExcel = () => {
     if (!filteredOrders.length) return;
 
@@ -113,7 +131,7 @@ export default function OrdersPage() {
     filteredOrders.forEach((order) => {
       order.items.forEach((item) => {
         rows.push({
-          [t("customerName")]: order.customerEmail,
+          [t("customerName")]: order.customerEmail || order.customerName,
           [t("product")]: item.productName,
           [t("quantity")]: item.quantity,
           [t("Unit")]: item.unity,
@@ -147,24 +165,26 @@ export default function OrdersPage() {
     saveAs(data, fileName);
   };
 
-  const uniqueUsers = Array.from(new Set(orders.map((o) => o.customerName)));
-
   return (
     <ProtectedRoute>
       <Layout>
         <div className="space-y-6">
           <h1 className="text-3xl font-bold">{t("orders")}</h1>
 
+          {/* Filter */}
           <div className="flex gap-4 items-center">
             <select
               value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
+              onChange={(e) => {
+                setSelectedUser(e.target.value);
+                setCurrentPage(1); // filter bosilganda sahifa 1 bo‘lsin
+              }}
               className="border p-2 rounded"
             >
               <option value="all">{t("allUsers")}</option>
-              {uniqueUsers.map((u) => (
-                <option key={u} value={u}>
-                  {u}
+              {users.map((user) => (
+                <option key={user.id} value={user.username}>
+                  {user.username}
                 </option>
               ))}
             </select>
@@ -172,26 +192,32 @@ export default function OrdersPage() {
             <input
               type="date"
               value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+                setCurrentPage(1);
+              }}
               className="border p-2 rounded"
             />
 
             <Button onClick={exportToExcel}>{t("exportExcel")}</Button>
           </div>
 
+          {/* Order Table */}
           <OrderTable
-            orders={filteredOrders}
+            orders={currentOrders}
             onViewOrder={handleViewOrder}
-            onDeleteSuccess={() => fetchOrders(currentPage)}
+            onDeleteSuccess={fetchOrders}
           />
 
-          <div className="flex justify-center items-center gap-2 mt-4">
+          {/* Pagination */}
+          <div className="flex justify-center items-center gap-2 mt-4 flex-wrap">
             <Button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
             >
               {"<"}
             </Button>
+
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <Button
                 key={page}
@@ -201,6 +227,7 @@ export default function OrdersPage() {
                 {page}
               </Button>
             ))}
+
             <Button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -209,6 +236,7 @@ export default function OrdersPage() {
             </Button>
           </div>
 
+          {/* Order Details Modal */}
           <OrderDetails
             isOpen={isDetailsOpen}
             onClose={() => setIsDetailsOpen(false)}
